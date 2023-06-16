@@ -54,3 +54,6 @@ dkms.conf
 
 # Test files
 teste.log
+
+# IDE configs
+.vscode/
