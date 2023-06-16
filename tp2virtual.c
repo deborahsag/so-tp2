@@ -11,20 +11,29 @@ int main(int argc, char *argv[])  {
     printf("Arquivo de entrada: %s\n", argv[2]);
     printf("Tamanho da memoria: %s KB\n", argv[4]);
     printf("Tamanho das páginas: %s KB\n", argv[3]);
-    printf("Técnica de reposição: %s\n", argv[1]);
+    printf("Técnica de reposição: %s\n\n", argv[1]);
     
+    if (debug) printf("Iniciando tabela de paginas \n\n");
+    Page *page_table = init_page();
+
     FILE *file = fopen(argv[2], "r");
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        if (debug) printf("Addr: %x, mode: %c\n", addr, rw);
+        if (debug) printf("\nAddr: %x, mode: %c\n", addr, rw);      
+        
+        if (debug) {
+            printf("Inserindo na lista...\n");
+            insert_in_table(addr, page_table);
+            print_last_page_addr(page_table);
+        }
     }
     
     fclose(file);
 
-    printf("Paginad lidas: \n");
+    printf("Paginas lidas: \n");
     printf("Paginas escritas: \n");
-    
+
 }
