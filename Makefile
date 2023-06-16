@@ -1,7 +1,7 @@
 CC		= gcc
 CFLAGS	= -Wall
 
-all: tp2virtual
+all: clean tp2virtual
 
 tp2virtual.o: tp2virtual.h tp2virtual.c
 	$(CC) $(CFLAGS) -c tp2virtual.c
