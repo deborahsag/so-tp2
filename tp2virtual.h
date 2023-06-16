@@ -7,8 +7,10 @@
 
 typedef struct Page Page;
 struct Page {
-    int size;
     unsigned addr;
+    int last_acc;
+    int altered;
+    int table_size;
     Page *next;
 };
 
@@ -17,8 +19,10 @@ Page* init_page() {
 /* Inicia uma celula nova da tabela de paginas */
     Page *page;
     page = malloc (sizeof(Page));
+    page->last_acc = 0;
+    page->altered = 0;
     page->next = NULL;
-    page->size = 0;
+    page->table_size = 0;
     return page;
 }
 
@@ -34,7 +38,14 @@ void insert_in_table(unsigned addr, Page* page_table) {
     }
 
     last->next = page;
-    page_table->size += 1;
+    page_table->table_size += 1;
+}
+
+
+void remove_from_table(Page* page_table, Page* prev, Page* page) {
+/* Remove uma celula da lista dada a cabeca da lista, a celula anterior e a celula a ser removida */    
+    prev->next = page->next;
+    page_table->table_size -= 1;
 }
 
 
@@ -52,7 +63,8 @@ bool search_table(unsigned addr, Page* page_table) {
 
 
 bool is_full(int size, Page* page_table) {
-    if (page_table->size >= size) return true;
+/* Retorna se a tabela de paginas esta cheia */
+    if (page_table->table_size >= size) return true;
     else return false;
 }
 
@@ -82,21 +94,21 @@ unsigned page_number(unsigned addr, int page_size){
 }
 
 
-void sub_lru(unsigned addr, char rw){
+void sub_lru(unsigned addr, char rw, Page* page_table){
     return;
 }
 
 
-void sub_2a(unsigned addr, char rw){
+void sub_2a(unsigned addr, char rw, Page* page_table){
     return;
 }
 
 
-void sub_fifo(unsigned addr, char rw){
+void sub_fifo(unsigned addr, char rw, Page* page_table){
     return;
 }
 
 
-void sub_random(unsigned addr, char rw){
+void sub_random(unsigned addr, char rw, Page* page_table){
     return;
 }
