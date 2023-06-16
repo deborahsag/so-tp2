@@ -14,7 +14,7 @@ int main(int argc, char *argv[])  {
     printf("Técnica de reposição: %s\n\n", argv[1]);
     
     if (debug) printf("Iniciando tabela de paginas \n\n");
-    Page *page_table = init_page();
+    Page *page_table = init_page(debug);
 
     FILE *file = fopen(argv[2], "r");
     unsigned addr;
@@ -22,18 +22,27 @@ int main(int argc, char *argv[])  {
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        if (debug) printf("\nAddr: %x, mode: %c\n", addr, rw);      
+        
+        if (debug) printf("\nEndereco: %x, leitura/escrita: %c\n", addr, rw);
         
         if (debug) {
-            printf("Inserindo na lista...\n");
-            insert_in_table(addr, page_table);
-            print_last_page_addr(page_table);
-        }
+            if (rw =='w') {
+                printf("Inserindo na lista...\n");
+                insert_in_table(addr, page_table);
+                print_last_page_addr(page_table);
+            }
+        }        
     }
     
     fclose(file);
 
-    printf("Paginas lidas: \n");
+    if (debug){
+        bool hit = search_table(addr, page_table);
+        printf("\nProcura ultimo referenciado: %x, Hit: %d\n", addr, hit);
+    }
+    
+
+    printf("\n\nPaginas lidas: \n");
     printf("Paginas escritas: \n");
 
 }

@@ -24,7 +24,7 @@ Page* init_page() {
 
 
 void insert_in_table(unsigned addr, Page* page_table) {
-/* Insere uma pagina na tabela de paginas */
+/* Insere uma pagina na tabela de paginas baseado em seu endereco */
     Page *page = init_page();
     page->addr = addr;
 
@@ -35,6 +35,25 @@ void insert_in_table(unsigned addr, Page* page_table) {
 
     last->next = page;
     page_table->size += 1;
+}
+
+
+bool search_table(unsigned addr, Page* page_table) {
+/* Retorna true para um hit, retorna false para um miss */    
+    Page *page = page_table;
+    while(page->next != NULL){
+        page = page->next;
+        if (page->addr == addr){
+            return true;
+        }
+    }
+    return false;
+}
+
+
+bool is_full(int size, Page* page_table) {
+    if (page_table->size >= size) return true;
+    else return false;
 }
 
 
