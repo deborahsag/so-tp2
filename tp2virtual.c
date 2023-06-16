@@ -2,6 +2,11 @@
 
 int main(int argc, char *argv[])  {
     
+    // Ativa modo de depuracao
+    bool debug;
+    if (strcmp(argv[5], "debug") == 0) debug = true; else debug = false;
+    
+    if (debug) printf("Modo de depuracao\n\n");
     printf("Executando o simulador...\n");
     printf("Arquivo de entrada: %s\n", argv[2]);
     printf("Tamanho da memoria: %s KB\n", argv[4]);
@@ -14,8 +19,12 @@ int main(int argc, char *argv[])  {
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        printf("Addr: %x, mode: %c\n", addr, rw);
+        if (debug) printf("Addr: %x, mode: %c\n", addr, rw);
     }
     
-    fclose(file);    
+    fclose(file);
+
+    printf("Paginad lidas: \n");
+    printf("Paginas escritas: \n");
+    
 }

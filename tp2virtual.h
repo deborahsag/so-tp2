@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 
-unsigned find_page(unsigned addr, int page_size){
+unsigned page_number(unsigned addr, int page_size){
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
 
     int temp = page_size;
