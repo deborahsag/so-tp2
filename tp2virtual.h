@@ -5,6 +5,12 @@
 #include <ctype.h>
 
 
+typedef struct Report Report;
+struct Report {
+    int page_faults;
+    int overwritten;
+} Report;
+
 typedef struct Page Page;
 struct Page {
     unsigned addr;
@@ -115,7 +121,7 @@ void print_backwards(Page* page_table) {
 }
 
 
-unsigned page_addr(unsigned addr, int page_size){
+unsigned page_addr(unsigned addr, int page_size) {
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
     int temp = page_size;
     int s = 0;
@@ -127,21 +133,53 @@ unsigned page_addr(unsigned addr, int page_size){
 }
 
 
-void sub_lru(unsigned addr, char rw, Page* page_table){
+void sub_lru(FILE *file, Page* page_table, bool debug) {
+/* Algoritmo de substituicao Last Recently Used (LRU) */
+    unsigned addr;
+    char rw;
+
+    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
+        rw = tolower(rw);
+        // Maipulacao de pagina
+    }
     return;
 }
 
 
-void sub_2a(unsigned addr, char rw, Page* page_table){
+void sub_2a(FILE *file, Page* page_table, bool debug) {
+/* Algoritmo de substituicao Segunda Chance (2a) */
+    unsigned addr;
+    char rw;
+
+    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
+        rw = tolower(rw);
+        // Maipulacao de pagina
+    }
     return;
 }
 
 
-void sub_fifo(unsigned addr, char rw, Page* page_table){
+void sub_fifo(FILE *file, Page* page_table, bool debug){
+/* Algoritmo de substituicao First In First Out (FIFO) */
+    unsigned addr;
+    char rw;
+
+    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
+        rw = tolower(rw);
+        // Maipulacao de pagina
+    }
     return;
 }
 
 
-void sub_random(unsigned addr, char rw, Page* page_table){
+void sub_random(FILE *file, Page* page_table, bool debug){
+/* Algoritmo de substituicao Aleatorio (Random) */
+    unsigned addr;
+    char rw;
+
+    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
+        rw = tolower(rw);
+        // Maipulacao de pagina
+    }
     return;
 }

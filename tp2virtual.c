@@ -5,8 +5,8 @@ int main(int argc, char *argv[])  {
     /* Ativa modo de depuracao */
     bool debug;
     if (strcmp(argv[5], "debug") == 0) debug = true; else debug = false;
-    
     if (debug) printf("Modo de depuracao\n\n");
+    
     printf("Executando o simulador...\n");
     printf("Arquivo de entrada: %s\n", argv[2]);
     printf("Tamanho da memoria: %s KB\n", argv[4]);
@@ -18,51 +18,25 @@ int main(int argc, char *argv[])  {
     int max_table_size = mem_size / page_size;
     if (debug) printf("\nTamanho da tabela: %d\n\n", max_table_size);
 
-    if (debug) printf("Iniciando tabela de paginas\n");
     Page *page_table = init_page();
+    if (debug) printf("Iniciando tabela de paginas\n");
 
     FILE *file = fopen(argv[2], "r");
-    unsigned addr;
-    char rw;
-
-    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
-        rw = tolower(rw);
-        
-        if (debug) {
-            printf("\nEndereco: %x, leitura/escrita: %c\n", addr, rw);
-            printf("Inserindo todos na tabela\n");
-            insert_table_end(addr, page_table);
-        }
-
-        if (strcmp(argv[1], "lru") == 0) {
-            sub_lru(addr, rw, page_table);
-        }
-        else if (strcmp(argv[1], "2a") == 0) {
-            sub_2a(addr, rw, page_table);
-        }
-        else if (strcmp(argv[1], "fifo") == 0) {
-            sub_fifo(addr, rw, page_table);
-        }
-        else if (strcmp(argv[1], "random") == 0) {
-            sub_random(addr, rw, page_table);
-        }
+    
+    if (strcmp(argv[1], "lru") == 0) {
+        sub_lru(file, page_table, debug);
+    }
+    else if (strcmp(argv[1], "2a") == 0) {
+        sub_2a(file, page_table, debug);
+    }
+    else if (strcmp(argv[1], "fifo") == 0) {
+        sub_fifo(file, page_table, debug);
+    }
+    else if (strcmp(argv[1], "random") == 0) {
+        sub_random(file, page_table, debug);
     }
     
     fclose(file);
-
-    if (debug){
-        bool hit = search_table(addr, page_table);
-        printf("\nProcura ultimo referenciado: %x, Hit: %d\n\n", addr, hit);
-        
-        printf("Trocar uma pagina no meio da tabela\n\n");
-        print_table(page_table);
-        print_backwards(page_table);
-        Page* new = init_page();
-        new->addr = addr;
-        swap_for_new(page_table->next->next->next, new, page_table);
-        printf("\nSwapped\n");
-        print_table(page_table);
-    }
     
     printf("Paginas lidas: \n");
     printf("Paginas escritas: \n");
