@@ -18,8 +18,7 @@ struct Page {
 
 Page* init_page() {
 /* Inicia uma celula nova da tabela de paginas */
-    Page *page;
-    page = malloc (sizeof(Page));
+    Page *page = malloc (sizeof(Page));
     page->last_acc = 0;
     page->altered = 0;
     page->prev = NULL;
@@ -47,20 +46,32 @@ void insert_table_end(unsigned addr, Page* page_table) {
 
 void swap_page(Page* old, Page* new, Page* page_table) {
 /* Substitui uma pagina na tabela por outra dada a pagina anterior da que esta sendo substituida, a nova pagina e a tabela de pagina */
-    Page* prev = old->prev;
-    Page* next = old->next;
-    prev->next = new;
-    new->prev = prev;
-    next->prev = new;
-    new->next = next;
+    new->next = old->next;
+    old->next = new;
+    new->prev = old;
+
+    if (new->next != NULL) {
+        new->next->prev = new;
+    }
+
+    if (old->prev == NULL) {
+        page_table = new;
+    } else {
+        old->prev->next = new;
+    }
+
+    if (old->next != NULL) {
+        old->next->prev = new;
+    }
+    free(old);
 }
 
 
-// void remove_from_table(Page* page_table, Page* prev, Page* page) {
-// /* Remove uma celula da lista dada a cabeca da lista, a celula anterior e a celula a ser removida */    
-//     prev->next = page->next;
-//     page_table->table_size -= 1;
-// }
+bool is_full(int size, Page* page_table) {
+/* Retorna se a tabela de paginas esta cheia */
+    if (page_table->table_size >= size) return true;
+    else return false;
+}
 
 
 Page* search_table(unsigned addr, Page* page_table) {
@@ -76,10 +87,15 @@ Page* search_table(unsigned addr, Page* page_table) {
 }
 
 
-bool is_full(int size, Page* page_table) {
-/* Retorna se a tabela de paginas esta cheia */
-    if (page_table->table_size >= size) return true;
-    else return false;
+void print_table(Page* page_table) {
+/* Imprime os enderecos da tabela de paginas */
+    printf("Tabela:\n");
+    Page *page = page_table;
+    while(page->next != NULL){
+        page = page->next;
+        printf("%x\n", page->addr);
+    }
+    printf("\n");
 }
 
 
@@ -96,14 +112,12 @@ void print_last_page_addr(Page *page_table) {
 
 unsigned page_number(unsigned addr, int page_size){
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
-
     int temp = page_size;
     int s = 0;
     while (temp > 1) {
         temp = temp >> 1;
         s++;
     }
-
     return addr >> s;
 }
 

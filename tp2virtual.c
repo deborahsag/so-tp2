@@ -28,8 +28,13 @@ int main(int argc, char *argv[])  {
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
         
-        if (debug) printf("\nEndereco: %x, leitura/escrita: %c\n", addr, rw);
-        
+        if (debug) {
+            printf("\nEndereco: %x, leitura/escrita: %c\n", addr, rw);
+            printf("Inserindo todos na tabela\n");
+            insert_table_end(addr, page_table);
+            print_last_page_addr(page_table);
+        }
+
         if (strcmp(argv[1], "lru") == 0) {
             sub_lru(addr, rw, page_table);
         }
@@ -49,6 +54,14 @@ int main(int argc, char *argv[])  {
     if (debug){
         bool hit = search_table(addr, page_table);
         printf("\nProcura ultimo referenciado: %x, Hit: %d\n\n", addr, hit);
+        
+        printf("Trocar uma pagina no meio da tabela\n\n");
+        print_table(page_table);
+        Page* new = init_page();
+        new->addr = addr;
+        swap_page(page_table->next->next->next, new, page_table);
+        printf("\nSwapped\n");
+        print_table(page_table);
     }
     
     printf("Paginas lidas: \n");
