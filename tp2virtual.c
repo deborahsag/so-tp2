@@ -32,7 +32,6 @@ int main(int argc, char *argv[])  {
             printf("\nEndereco: %x, leitura/escrita: %c\n", addr, rw);
             printf("Inserindo todos na tabela\n");
             insert_table_end(addr, page_table);
-            print_last_page_addr(page_table);
         }
 
         if (strcmp(argv[1], "lru") == 0) {
@@ -57,9 +56,10 @@ int main(int argc, char *argv[])  {
         
         printf("Trocar uma pagina no meio da tabela\n\n");
         print_table(page_table);
+        print_backwards(page_table);
         Page* new = init_page();
         new->addr = addr;
-        swap_page(page_table->next->next->next, new, page_table);
+        swap_for_new(page_table->next->next->next, new, page_table);
         printf("\nSwapped\n");
         print_table(page_table);
     }

@@ -18,7 +18,7 @@ struct Page {
 
 
 Page* init_page() {
-/* Inicia uma celula nova da tabela de paginas */
+/* Inicia uma celula nova da lista */
     Page *page = malloc (sizeof(Page));
     page->last_acc = 0;
     page->altered = 0;
@@ -31,23 +31,25 @@ Page* init_page() {
 
 
 void insert_table_end(unsigned addr, Page* page_table) {
-/* Insere uma pagina na tabela de paginas baseado em seu endereco */
+/* Insere uma pagina dado seu endereco no fim da lista */
     Page *page = init_page();
     page->addr = addr;
 
-    Page *last = page_table;
-    while (last->next != NULL) {
-        last = last->next;
+    if (page_table->next == NULL) {
+        page_table->next = page;
+        page->prev = page_table;
+    } else {
+        page_table->last->next = page;
+        page->prev = page_table->last;
     }
 
-    last->next = page;
-    page->prev = last;
+    page_table->last = page;
     page_table->table_size += 1;
 }
 
 
 void swap_for_new(Page* old, Page* new, Page* page_table) {
-/* Substitui uma pagina na tabela por outra dada a pagina anterior da que esta sendo substituida, a nova pagina e a tabela de pagina */
+/* Substitui uma pagina na tabela por outra, dada a pagina a ser substituida, a nova pagina e a tabela de pagina */
     new->next = old->next;
     old->next = new;
     new->prev = old;
@@ -77,7 +79,7 @@ bool is_full(int size, Page* page_table) {
 
 
 Page* search_table(unsigned addr, Page* page_table) {
-/* Retorna a pagina anterior  */    
+/* Retorna a pagina dado seu endereco */    
     Page *page = page_table;
     while(page->next != NULL){
         page = page->next;
@@ -93,7 +95,7 @@ void print_table(Page* page_table) {
 /* Imprime os enderecos da tabela de paginas */
     printf("Tabela:\n");
     Page *page = page_table;
-    while(page->next != NULL){
+    while(page->next != NULL) {
         page = page->next;
         printf("%x\n", page->addr);
     }
@@ -101,14 +103,15 @@ void print_table(Page* page_table) {
 }
 
 
-void print_last_page_addr(Page *page_table) {
-/* Imprime o endereco da ultima pagina da tabela */
-    Page *last = page_table;
-    while (last->next != NULL) {
-        last = last->next;
+void print_backwards(Page* page_table) {
+/* Imprime os enderecos de tras para frente para testar a lista duplamente encadeada */
+    printf("Tabela de tras para frente:\n");
+    Page *page = page_table->last;
+    while(page->prev != NULL) {
+        printf("%x\n", page->addr);
+        page = page->prev;
     }
-    unsigned data = last->addr;
-    printf("Ultimo inserido: %x\n", data);
+    printf("\n");
 }
 
 
