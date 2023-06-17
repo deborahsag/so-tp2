@@ -13,6 +13,7 @@ struct Page {
     int table_size;
     Page *prev;
     Page *next;
+    Page *last;
 };
 
 
@@ -23,6 +24,7 @@ Page* init_page() {
     page->altered = 0;
     page->prev = NULL;
     page->next = NULL;
+    page->last = NULL;
     page->table_size = 0;
     return page;
 }
@@ -44,7 +46,7 @@ void insert_table_end(unsigned addr, Page* page_table) {
 }
 
 
-void swap_page(Page* old, Page* new, Page* page_table) {
+void swap_for_new(Page* old, Page* new, Page* page_table) {
 /* Substitui uma pagina na tabela por outra dada a pagina anterior da que esta sendo substituida, a nova pagina e a tabela de pagina */
     new->next = old->next;
     old->next = new;
@@ -110,7 +112,7 @@ void print_last_page_addr(Page *page_table) {
 }
 
 
-unsigned page_number(unsigned addr, int page_size){
+unsigned page_addr(unsigned addr, int page_size){
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
     int temp = page_size;
     int s = 0;
