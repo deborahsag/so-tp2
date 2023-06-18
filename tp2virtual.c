@@ -20,7 +20,7 @@ int main(int argc, char *argv[])  {
     Page *page_table = init_page();
     page_table->page_size = page_size;
     page_table->max_table_size = max_table_size;
-    
+
     if (debug) {
         printf("\nIniciando tabela de paginas\n");
         printf("Tamanho da pagina: %d KB\n", page_table->page_size);
@@ -45,6 +45,9 @@ int main(int argc, char *argv[])  {
     }
     
     fclose(file);
+
+    if (debug) print_table(page_table);
+
     free_table(page_table);
     
     if (debug) printf("\nFim da depuracao\n\n");

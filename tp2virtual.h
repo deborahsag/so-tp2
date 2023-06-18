@@ -110,7 +110,7 @@ Page* search_table(unsigned addr, Page* page_table) {
 
 void print_table(Page* page_table) {
 /* Imprime os enderecos da tabela de paginas */
-    printf("Tabela:\n");
+    printf("\nTabela:\n");
     Page *page = page_table;
     while(page->next != NULL) {
         page = page->next;
@@ -122,7 +122,7 @@ void print_table(Page* page_table) {
 
 void print_backwards(Page* page_table) {
 /* Imprime os enderecos de tras para frente para testar a lista duplamente encadeada */
-    printf("Tabela de tras para frente:\n");
+    printf("\nTabela de tras para frente:\n");
     Page *page = page_table->last;
     while(page->prev != NULL) {
         printf("%x\n", page->addr);
@@ -241,9 +241,9 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        addr = page_addr(addr, page_table->page_size);
+        //addr = page_addr(addr, page_table->page_size);
 
-        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
+        if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
 
         page_search = search_table(addr, page_table);
         if (page_search != NULL) {
@@ -254,23 +254,16 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
 
             if (debug) printf("Page fault\n");
             
-            if (!is_full(page_table)) {
-                insert_table_end(addr, page_table);
+            if (is_full(page_table)) {
+                remove_from_top(page_table);
+                report.dirty_pages++;
+
+                if (debug) printf("Escrita em disco\n");
             }
-            else {
-            // Usa o algoritmo
-            // O que eh dirty page???                  
-            }
+            insert_table_end(addr, page_table);
         }
 
     }
-
-    if (debug) {
-        remove_from_top(page_table);
-        print_backwards(page_table);
-    }
-
-    free(page_search);
 
     return report;
 }
@@ -306,7 +299,6 @@ Report sub_random(FILE *file, Page* page_table, int debug){
             // O que eh dirty page???                  
             }
         }
-
     }
 
     free(page_search);
