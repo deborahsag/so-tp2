@@ -56,6 +56,15 @@ void insert_table_end(unsigned addr, Page* page_table) {
 }
 
 
+void remove_from_top(Page* page_table) {
+/* Elimina a pagina do topo da tabela */
+    Page* first = page_table->next;
+    page_table->next = page_table->next->next;
+    page_table->next->prev = page_table;
+    free(first);
+}
+
+
 void swap_for_new(Page* old, Page* new, Page* page_table) {
 /* Substitui uma pagina na tabela por outra, dada a pagina a ser substituida, a nova pagina e a tabela de pagina */
     new->next = old->next;
@@ -238,7 +247,7 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
 
         page_search = search_table(addr, page_table);
         if (page_search != NULL) {
-            // Achou a pagina
+            if (debug) printf("Encontrou a pagina\n");
         }
         else {
             report.page_faults++;
@@ -254,6 +263,11 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
             }
         }
 
+    }
+
+    if (debug) {
+        remove_from_top(page_table);
+        print_backwards(page_table);
     }
 
     free(page_search);
