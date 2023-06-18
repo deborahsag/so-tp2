@@ -16,8 +16,9 @@ struct Page {
     unsigned addr;
     int last_acc;
     int altered;
+    int page_size;
     int table_size;
-    int max_size;
+    int max_table_size;
     Page *prev;
     Page *next;
     Page *last;
@@ -80,7 +81,7 @@ void swap_for_new(Page* old, Page* new, Page* page_table) {
 
 int is_full(Page* page_table) {
 /* Retorna se a tabela de paginas esta cheia */
-    if (page_table->table_size >= page_table->max_size) return 1;
+    if (page_table->table_size >= page_table->max_table_size) return 1;
     else return 0;
 }
 
@@ -153,6 +154,8 @@ Report sub_lru(FILE *file, Page* page_table, int debug) {
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
+        addr = page_addr(addr, page_table->page_size);
+
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
         page_search = search_table(addr, page_table);
@@ -160,7 +163,10 @@ Report sub_lru(FILE *file, Page* page_table, int debug) {
             // Achou a pagina
         }
         else {
-            // Page fault ++
+            report.page_faults++;
+
+            if (debug) printf("Page fault\n");
+
             if (!is_full(page_table)) {
                 insert_table_end(addr, page_table);
             }
@@ -187,6 +193,8 @@ Report sub_2a(FILE *file, Page* page_table, int debug) {
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
+        addr = page_addr(addr, page_table->page_size);
+
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
         page_search = search_table(addr, page_table);
@@ -194,7 +202,10 @@ Report sub_2a(FILE *file, Page* page_table, int debug) {
             // Achou a pagina
         }
         else {
-            // Page fault ++
+            report.page_faults++;
+
+            if (debug) printf("Page fault\n");
+            
             if (!is_full(page_table)) {
                 insert_table_end(addr, page_table);
             }
@@ -221,6 +232,8 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
+        addr = page_addr(addr, page_table->page_size);
+
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
         page_search = search_table(addr, page_table);
@@ -228,7 +241,10 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
             // Achou a pagina
         }
         else {
-            // Page fault ++
+            report.page_faults++;
+
+            if (debug) printf("Page fault\n");
+            
             if (!is_full(page_table)) {
                 insert_table_end(addr, page_table);
             }
@@ -241,7 +257,7 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
     }
 
     free(page_search);
-    
+
     return report;
 }
 
@@ -255,6 +271,8 @@ Report sub_random(FILE *file, Page* page_table, int debug){
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
+        addr = page_addr(addr, page_table->page_size);
+
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
         page_search = search_table(addr, page_table);
@@ -262,7 +280,10 @@ Report sub_random(FILE *file, Page* page_table, int debug){
             // Achou a pagina
         }
         else {
-            // Page fault ++
+            report.page_faults++;
+
+            if (debug) printf("Page fault\n");
+            
             if (!is_full(page_table)) {
                 insert_table_end(addr, page_table);
             }

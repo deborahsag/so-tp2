@@ -16,12 +16,17 @@ int main(int argc, char *argv[])  {
     int mem_size = atoi(argv[4]);
     int page_size = atoi(argv[3]);
     int max_table_size = mem_size / page_size;
-    if (debug) printf("\nTamanho da tabela: %d\n\n", max_table_size);
 
     Page *page_table = init_page();
-    page_table->max_size = max_table_size;
-    if (debug) printf("Iniciando tabela de paginas\n\n");
-
+    page_table->page_size = page_size;
+    page_table->max_table_size = max_table_size;
+    
+    if (debug) {
+        printf("\nIniciando tabela de paginas\n");
+        printf("Tamanho da pagina: %d KB\n", page_table->page_size);
+        printf("Tamanho da tabela: %d paginas\n\n", page_table->max_table_size);
+    }
+    
     Report report;
 
     FILE *file = fopen(argv[2], "r");
@@ -42,6 +47,8 @@ int main(int argc, char *argv[])  {
     fclose(file);
     free_table(page_table);
     
+    if (debug) printf("\nFim da depuracao\n\n");
+
     printf("Paginas lidas: %d\n", report.page_faults);
     printf("Paginas escritas: %d\n", report.dirty_pages);
 
