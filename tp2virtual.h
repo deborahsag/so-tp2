@@ -6,10 +6,11 @@
 
 
 typedef struct Report Report;
-struct Report {
+struct Report{
     int page_faults;
-    int overwritten;
-} Report;
+    int dirty_pages;
+};
+
 
 typedef struct Page Page;
 struct Page {
@@ -121,6 +122,16 @@ void print_backwards(Page* page_table) {
 }
 
 
+void free_table(Page* page_table) {
+    Page *aux = page_table;
+    while(page_table != NULL) {
+        aux = page_table;
+        page_table = page_table->next;
+        free(aux);
+    }
+}
+
+
 unsigned page_addr(unsigned addr, int page_size) {
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
     int temp = page_size;
@@ -133,8 +144,9 @@ unsigned page_addr(unsigned addr, int page_size) {
 }
 
 
-void sub_lru(FILE *file, Page* page_table, bool debug) {
+Report sub_lru(FILE *file, Page* page_table, bool debug) {
 /* Algoritmo de substituicao Last Recently Used (LRU) */
+    Report report = {0, 0};
     unsigned addr;
     char rw;
 
@@ -142,12 +154,13 @@ void sub_lru(FILE *file, Page* page_table, bool debug) {
         rw = tolower(rw);
         // Maipulacao de pagina
     }
-    return;
+    return report;
 }
 
 
-void sub_2a(FILE *file, Page* page_table, bool debug) {
+Report sub_2a(FILE *file, Page* page_table, bool debug) {
 /* Algoritmo de substituicao Segunda Chance (2a) */
+    Report report = {0, 0};
     unsigned addr;
     char rw;
 
@@ -155,12 +168,13 @@ void sub_2a(FILE *file, Page* page_table, bool debug) {
         rw = tolower(rw);
         // Maipulacao de pagina
     }
-    return;
+    return report;
 }
 
 
-void sub_fifo(FILE *file, Page* page_table, bool debug){
+Report sub_fifo(FILE *file, Page* page_table, bool debug){
 /* Algoritmo de substituicao First In First Out (FIFO) */
+    Report report = {0, 0};
     unsigned addr;
     char rw;
 
@@ -168,12 +182,13 @@ void sub_fifo(FILE *file, Page* page_table, bool debug){
         rw = tolower(rw);
         // Maipulacao de pagina
     }
-    return;
+    return report;
 }
 
 
-void sub_random(FILE *file, Page* page_table, bool debug){
+Report sub_random(FILE *file, Page* page_table, bool debug){
 /* Algoritmo de substituicao Aleatorio (Random) */
+    Report report = {0, 0};
     unsigned addr;
     char rw;
 
@@ -181,5 +196,5 @@ void sub_random(FILE *file, Page* page_table, bool debug){
         rw = tolower(rw);
         // Maipulacao de pagina
     }
-    return;
+    return report;
 }

@@ -19,27 +19,30 @@ int main(int argc, char *argv[])  {
     if (debug) printf("\nTamanho da tabela: %d\n\n", max_table_size);
 
     Page *page_table = init_page();
-    if (debug) printf("Iniciando tabela de paginas\n");
+    if (debug) printf("Iniciando tabela de paginas\n\n");
+
+    Report report;
 
     FILE *file = fopen(argv[2], "r");
     
     if (strcmp(argv[1], "lru") == 0) {
-        sub_lru(file, page_table, debug);
+        report = sub_lru(file, page_table, debug);
     }
     else if (strcmp(argv[1], "2a") == 0) {
-        sub_2a(file, page_table, debug);
+        report = sub_2a(file, page_table, debug);
     }
     else if (strcmp(argv[1], "fifo") == 0) {
-        sub_fifo(file, page_table, debug);
+        report = sub_fifo(file, page_table, debug);
     }
     else if (strcmp(argv[1], "random") == 0) {
-        sub_random(file, page_table, debug);
+        report = sub_random(file, page_table, debug);
     }
     
     fclose(file);
+    free_table(page_table);
     
-    printf("Paginas lidas: \n");
-    printf("Paginas escritas: \n");
+    printf("Paginas lidas: %d\n", report.page_faults);
+    printf("Paginas escritas: %d\n", report.dirty_pages);
 
     return 0;
 }
