@@ -14,14 +14,15 @@ typedef struct Page Page;
 struct Page {
     unsigned addr;
     int valid;
+    int dirty;
 };
 
 typedef struct Cell Cell;
 struct Cell {
     Page page;
     int page_size;
-    int table_size;
-    int max_table_size;
+    int list_size;
+    int max_list_size;
     Cell *prev;
     Cell *next;
     Cell *last;
@@ -37,7 +38,7 @@ Cell* init_frame() {
     frame->prev = NULL;
     frame->next = NULL;
     frame->last = NULL;
-    frame->table_size = 0;
+    frame->list_size = 0;
     return frame;
 }
 
@@ -56,16 +57,32 @@ void insert_end_list(unsigned addr, Cell* list) {
     }
 
     list->last = frame;
-    list->table_size += 1;
+    list->list_size += 1;
 }
 
 
-void remove_top_list(Cell* list) {
+unsigned remove_top_list(Cell* list) {
 /* Elimina o quadro do topo da lista */
     Cell* first = list->next;
+    unsigned rm_addr = first->page.addr;
     list->next = list->next->next;
     list->next->prev = list;
     free(first);
+    list->list_size--;
+    return rm_addr;
+}
+
+
+void move_to_bottom(Cell *frame, Cell *list) {
+/* Move um quadro para o fim da lista */
+    if (frame->next != NULL) {
+        frame->prev->next = frame->next;
+        frame->next->prev = frame->prev;
+        frame->prev = list->last;
+        frame->next = NULL;
+        list->last->next = frame;
+        list->last = frame;
+    }
 }
 
 
@@ -94,7 +111,7 @@ void swap_for_new(Cell* old, Cell* new, Cell* list) {
 
 int is_full(Cell* list) {
 /* Retorna se a lista esta cheia */
-    if (list->table_size >= list->max_table_size) return 1;
+    if (list->list_size >= list->max_list_size) return 1;
     else return 0;
 }
 
@@ -149,7 +166,7 @@ void free_list(Cell* list) {
 
 unsigned page_addr(unsigned addr, int page_size) {
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
-    int temp = page_size;
+    int temp = page_size * 1024;
     int s = 0;
     while (temp > 1) {
         temp = temp >> 1;
@@ -161,53 +178,50 @@ unsigned page_addr(unsigned addr, int page_size) {
 
 Report sub_fifo(FILE *file, Cell* list, int debug){
 /* Algoritmo de substituicao First In First Out (FIFO) */
-    //Page table[2097152] = {{0, 0}};
+    Page *table = malloc(2097152 * sizeof(Page));
     Report report = {0, 0};
-    Cell *page_search = init_frame();
+
     unsigned mem_addr;
     unsigned addr;
     char rw;
 
-    //printf("\n\nValido: %d\n\n", table[0].valid);
-
     while (fscanf(file, "%x %c", &mem_addr, &rw) != EOF) {
-        rw = tolower(rw);
+        
         addr = page_addr(mem_addr, list->page_size);
 
-        if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
+        if (debug) {
+            printf("\nEndereco: %x, modo: %c\n", addr, rw);
+            printf("Valido: %d\n", table[addr].valid);
+            printf("Sujo: %d\n", table[addr].dirty);
+        }
 
-        if (rw == 'r') {
-            page_search = search_list(addr, list);
-            if (page_search != NULL) {
-                if (debug) printf("Encontrou a pagina\n");
-            }
-            else {
-                report.page_faults++;
-
-                if (debug) printf("Page fault\n");
-                
-                if (is_full(list)) {
-                    remove_top_list(list);
-                    report.dirty_pages++;
-
-                    if (debug) printf("Escrita em disco\n");
-                }
-                insert_end_list(addr, list);
+        if (table[addr].valid) {
+            if (rw == 'W') {
+                table[addr].dirty = 1;
             }
         }
-        else {
-            //table[addr].valid = 1;
+        else { 
+            report.page_faults++;
+            if (is_full(list)) {
+                unsigned rm_addr = remove_top_list(list);
+                table[rm_addr].valid = 0;
+                if (table[rm_addr].dirty) {
+                    report.dirty_pages++; 
+                }
+            }
+            table[addr].addr = addr;
+            table[addr].valid = 1;
+            insert_end_list(addr, list);             
         }
     }
 
     return report;
 }
 
-
 Report sub_lru(FILE *file, Cell* list, int debug) {
 /* Algoritmo de substituicao Least Recently Used (LRU) */
     Report report = {0, 0};
-    Cell *page_search = init_frame();
+    Cell *page_search;
     unsigned addr;
     char rw;
 
@@ -215,29 +229,28 @@ Report sub_lru(FILE *file, Cell* list, int debug) {
         rw = tolower(rw);
         addr = page_addr(addr, list->page_size);
 
-        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
+        if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
 
         page_search = search_list(addr, list);
         if (page_search != NULL) {
-            // Achou a pagina
+            move_to_bottom(page_search, list);
         }
         else {
             report.page_faults++;
 
             if (debug) printf("Page fault\n");
 
-            if (!is_full(list)) {
-                insert_end_list(addr, list);
+            if (is_full(list)) {
+                remove_top_list(list);
+                report.dirty_pages++;
+
+                if (debug) printf("Escrita em disco\n");
+
             }
-            else {
-            // Usa o algoritmo
-            // O que eh dirty page???                  
-            }
+            insert_end_list(addr, list);               
         }
 
     }
-
-    free(page_search);
 
     return report;
 }

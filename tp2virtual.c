@@ -15,16 +15,16 @@ int main(int argc, char *argv[])  {
     
     int mem_size = atoi(argv[4]);
     int page_size = atoi(argv[3]);
-    int max_table_size = mem_size / page_size;
+    int max_list_size = mem_size / page_size;
 
     Cell *list = init_frame();
     list->page_size = page_size;
-    list->max_table_size = max_table_size;
+    list->max_list_size = max_list_size;
 
     if (debug) {
         printf("\nIniciando tabela de paginas\n");
         printf("Tamanho da pagina: %d KB\n", list->page_size);
-        printf("Tamanho da tabela: %d paginas\n\n", list->max_table_size);
+        printf("Tamanho da tabela: %d paginas\n\n", list->max_list_size);
     }
     
     Report report;
