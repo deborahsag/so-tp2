@@ -19,6 +19,7 @@ int main(int argc, char *argv[])  {
     if (debug) printf("\nTamanho da tabela: %d\n\n", max_table_size);
 
     Page *page_table = init_page();
+    page_table->max_size = max_table_size;
     if (debug) printf("Iniciando tabela de paginas\n\n");
 
     Report report;

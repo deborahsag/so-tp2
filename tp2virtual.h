@@ -18,6 +18,7 @@ struct Page {
     int last_acc;
     int altered;
     int table_size;
+    int max_size;
     Page *prev;
     Page *next;
     Page *last;
@@ -78,9 +79,9 @@ void swap_for_new(Page* old, Page* new, Page* page_table) {
 }
 
 
-bool is_full(int size, Page* page_table) {
+bool is_full(Page* page_table) {
 /* Retorna se a tabela de paginas esta cheia */
-    if (page_table->table_size >= size) return true;
+    if (page_table->table_size >= page_table->max_size) return true;
     else return false;
 }
 
@@ -147,13 +148,33 @@ unsigned page_addr(unsigned addr, int page_size) {
 Report sub_lru(FILE *file, Page* page_table, bool debug) {
 /* Algoritmo de substituicao Last Recently Used (LRU) */
     Report report = {0, 0};
+    Page *page_search = init_page();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        // Maipulacao de pagina
+        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
+
+        page_search = search_table(addr, page_table);
+        if (page_search != NULL) {
+            // Achou a pagina
+        }
+        else {
+            // Page fault ++
+            if (!is_full(page_table)) {
+                insert_table_end(addr, page_table);
+            }
+            else {
+            // Usa o algoritmo
+            // O que eh dirty page???                  
+            }
+        }
+
     }
+
+    free(page_search);
+
     return report;
 }
 
@@ -161,13 +182,33 @@ Report sub_lru(FILE *file, Page* page_table, bool debug) {
 Report sub_2a(FILE *file, Page* page_table, bool debug) {
 /* Algoritmo de substituicao Segunda Chance (2a) */
     Report report = {0, 0};
+    Page *page_search = init_page();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        // Maipulacao de pagina
+        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
+
+        page_search = search_table(addr, page_table);
+        if (page_search != NULL) {
+            // Achou a pagina
+        }
+        else {
+            // Page fault ++
+            if (!is_full(page_table)) {
+                insert_table_end(addr, page_table);
+            }
+            else {
+            // Usa o algoritmo
+            // O que eh dirty page???                  
+            }
+        }
+
     }
+
+    free(page_search);
+
     return report;
 }
 
@@ -175,13 +216,33 @@ Report sub_2a(FILE *file, Page* page_table, bool debug) {
 Report sub_fifo(FILE *file, Page* page_table, bool debug){
 /* Algoritmo de substituicao First In First Out (FIFO) */
     Report report = {0, 0};
+    Page *page_search = init_page();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        // Maipulacao de pagina
+        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
+
+        page_search = search_table(addr, page_table);
+        if (page_search != NULL) {
+            // Achou a pagina
+        }
+        else {
+            // Page fault ++
+            if (!is_full(page_table)) {
+                insert_table_end(addr, page_table);
+            }
+            else {
+            // Usa o algoritmo
+            // O que eh dirty page???                  
+            }
+        }
+
     }
+
+    free(page_search);
+    
     return report;
 }
 
@@ -189,12 +250,32 @@ Report sub_fifo(FILE *file, Page* page_table, bool debug){
 Report sub_random(FILE *file, Page* page_table, bool debug){
 /* Algoritmo de substituicao Aleatorio (Random) */
     Report report = {0, 0};
+    Page *page_search = init_page();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        // Maipulacao de pagina
+        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
+
+        page_search = search_table(addr, page_table);
+        if (page_search != NULL) {
+            // Achou a pagina
+        }
+        else {
+            // Page fault ++
+            if (!is_full(page_table)) {
+                insert_table_end(addr, page_table);
+            }
+            else {
+            // Usa o algoritmo
+            // O que eh dirty page???                  
+            }
+        }
+
     }
+
+    free(page_search);
+
     return report;
 }
