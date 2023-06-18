@@ -11,62 +11,58 @@ struct Report{
 };
 
 
-typedef struct Page Page;
-struct Page {
+typedef struct Cell Cell;
+struct Cell {
     unsigned addr;
-    int last_acc;
-    int altered;
     int page_size;
     int table_size;
     int max_table_size;
-    Page *prev;
-    Page *next;
-    Page *last;
+    Cell *prev;
+    Cell *next;
+    Cell *last;
 };
 
 
-Page* init_page() {
+Cell* init_frame() {
 /* Inicia uma celula nova da lista */
-    Page *page = malloc (sizeof(Page));
-    page->last_acc = 0;
-    page->altered = 0;
-    page->prev = NULL;
-    page->next = NULL;
-    page->last = NULL;
-    page->table_size = 0;
-    return page;
+    Cell *frame = malloc (sizeof(Cell));
+    frame->prev = NULL;
+    frame->next = NULL;
+    frame->last = NULL;
+    frame->table_size = 0;
+    return frame;
 }
 
 
-void insert_table_end(unsigned addr, Page* page_table) {
-/* Insere uma pagina dado seu endereco no fim da lista */
-    Page *page = init_page();
-    page->addr = addr;
+void insert_end_list(unsigned addr, Cell* list) {
+/* Insere um quadro dado seu endereco no fim da lista */
+    Cell *frame = init_frame();
+    frame->addr = addr;
 
-    if (page_table->next == NULL) {
-        page_table->next = page;
-        page->prev = page_table;
+    if (list->next == NULL) {
+        list->next = frame;
+        frame->prev = list;
     } else {
-        page_table->last->next = page;
-        page->prev = page_table->last;
+        list->last->next = frame;
+        frame->prev = list->last;
     }
 
-    page_table->last = page;
-    page_table->table_size += 1;
+    list->last = frame;
+    list->table_size += 1;
 }
 
 
-void remove_from_top(Page* page_table) {
-/* Elimina a pagina do topo da tabela */
-    Page* first = page_table->next;
-    page_table->next = page_table->next->next;
-    page_table->next->prev = page_table;
+void remove_top_list(Cell* list) {
+/* Elimina o quadro do topo da lista */
+    Cell* first = list->next;
+    list->next = list->next->next;
+    list->next->prev = list;
     free(first);
 }
 
 
-void swap_for_new(Page* old, Page* new, Page* page_table) {
-/* Substitui uma pagina na tabela por outra, dada a pagina a ser substituida, a nova pagina e a tabela de pagina */
+void swap_for_new(Cell* old, Cell* new, Cell* list) {
+/* Substitui um quadro na lista por outro, dado o quadro a ser substituido, o novo quadro e a lista duplamente encadeada */
     new->next = old->next;
     old->next = new;
     new->prev = old;
@@ -76,7 +72,7 @@ void swap_for_new(Page* old, Page* new, Page* page_table) {
     }
 
     if (old->prev == NULL) {
-        page_table = new;
+        list = new;
     } else {
         old->prev->next = new;
     }
@@ -88,55 +84,56 @@ void swap_for_new(Page* old, Page* new, Page* page_table) {
 }
 
 
-int is_full(Page* page_table) {
-/* Retorna se a tabela de paginas esta cheia */
-    if (page_table->table_size >= page_table->max_table_size) return 1;
+int is_full(Cell* list) {
+/* Retorna se a lista esta cheia */
+    if (list->table_size >= list->max_table_size) return 1;
     else return 0;
 }
 
 
-Page* search_table(unsigned addr, Page* page_table) {
-/* Retorna a pagina dado seu endereco */    
-    Page *page = page_table;
-    while(page->next != NULL){
-        page = page->next;
-        if (page->addr == addr){
-            return page;
+Cell* search_list(unsigned addr, Cell* list) {
+/* Retorna o quadro dado seu endereco */    
+    Cell *frame = list;
+    while(frame->next != NULL){
+        frame = frame->next;
+        if (frame->addr == addr){
+            return frame;
         }
     }
     return NULL;
 }
 
 
-void print_table(Page* page_table) {
-/* Imprime os enderecos da tabela de paginas */
+void print_linked_list(Cell* list) {
+/* Imprime os enderecos da lista duplamente encadeada */
     printf("\nTabela:\n");
-    Page *page = page_table;
-    while(page->next != NULL) {
-        page = page->next;
-        printf("%x\n", page->addr);
+    Cell *frame = list;
+    while(frame->next != NULL) {
+        frame = frame->next;
+        printf("%x\n", frame->addr);
     }
     printf("\n");
 }
 
 
-void print_backwards(Page* page_table) {
+void print_backwards(Cell* list) {
 /* Imprime os enderecos de tras para frente para testar a lista duplamente encadeada */
     printf("\nTabela de tras para frente:\n");
-    Page *page = page_table->last;
-    while(page->prev != NULL) {
-        printf("%x\n", page->addr);
-        page = page->prev;
+    Cell *frame = list->last;
+    while(frame->prev != NULL) {
+        printf("%x\n", frame->addr);
+        frame = frame->prev;
     }
     printf("\n");
 }
 
 
-void free_table(Page* page_table) {
-    Page *aux = page_table;
-    while(page_table != NULL) {
-        aux = page_table;
-        page_table = page_table->next;
+void free_list(Cell* list) {
+/* Desaloca lista duplamente encadeada */
+    Cell *aux = list;
+    while(list != NULL) {
+        aux = list;
+        list = list->next;
         free(aux);
     }
 }
@@ -154,20 +151,20 @@ unsigned page_addr(unsigned addr, int page_size) {
 }
 
 
-Report sub_lru(FILE *file, Page* page_table, int debug) {
+Report sub_lru(FILE *file, Cell* list, int debug) {
 /* Algoritmo de substituicao Last Recently Used (LRU) */
     Report report = {0, 0};
-    Page *page_search = init_page();
+    Cell *page_search = init_frame();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        addr = page_addr(addr, page_table->page_size);
+        addr = page_addr(addr, list->page_size);
 
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
-        page_search = search_table(addr, page_table);
+        page_search = search_list(addr, list);
         if (page_search != NULL) {
             // Achou a pagina
         }
@@ -176,8 +173,8 @@ Report sub_lru(FILE *file, Page* page_table, int debug) {
 
             if (debug) printf("Page fault\n");
 
-            if (!is_full(page_table)) {
-                insert_table_end(addr, page_table);
+            if (!is_full(list)) {
+                insert_end_list(addr, list);
             }
             else {
             // Usa o algoritmo
@@ -193,20 +190,20 @@ Report sub_lru(FILE *file, Page* page_table, int debug) {
 }
 
 
-Report sub_2a(FILE *file, Page* page_table, int debug) {
+Report sub_2a(FILE *file, Cell* list, int debug) {
 /* Algoritmo de substituicao Segunda Chance (2a) */
     Report report = {0, 0};
-    Page *page_search = init_page();
+    Cell *page_search = init_frame();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        addr = page_addr(addr, page_table->page_size);
+        addr = page_addr(addr, list->page_size);
 
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
-        page_search = search_table(addr, page_table);
+        page_search = search_list(addr, list);
         if (page_search != NULL) {
             // Achou a pagina
         }
@@ -214,9 +211,9 @@ Report sub_2a(FILE *file, Page* page_table, int debug) {
             report.page_faults++;
 
             if (debug) printf("Page fault\n");
-            
-            if (!is_full(page_table)) {
-                insert_table_end(addr, page_table);
+
+            if (!is_full(list)) {
+                insert_end_list(addr, list);
             }
             else {
             // Usa o algoritmo
@@ -232,20 +229,20 @@ Report sub_2a(FILE *file, Page* page_table, int debug) {
 }
 
 
-Report sub_fifo(FILE *file, Page* page_table, int debug){
+Report sub_fifo(FILE *file, Cell* list, int debug){
 /* Algoritmo de substituicao First In First Out (FIFO) */
     Report report = {0, 0};
-    Page *page_search = init_page();
+    Cell *page_search = init_frame();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        //addr = page_addr(addr, page_table->page_size);
+        addr = page_addr(addr, list->page_size);
 
         if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
 
-        page_search = search_table(addr, page_table);
+        page_search = search_list(addr, list);
         if (page_search != NULL) {
             if (debug) printf("Encontrou a pagina\n");
         }
@@ -254,13 +251,13 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
 
             if (debug) printf("Page fault\n");
             
-            if (is_full(page_table)) {
-                remove_from_top(page_table);
+            if (is_full(list)) {
+                remove_top_list(list);
                 report.dirty_pages++;
 
                 if (debug) printf("Escrita em disco\n");
             }
-            insert_table_end(addr, page_table);
+            insert_end_list(addr, list);
         }
 
     }
@@ -269,20 +266,20 @@ Report sub_fifo(FILE *file, Page* page_table, int debug){
 }
 
 
-Report sub_random(FILE *file, Page* page_table, int debug){
+Report sub_random(FILE *file, Cell* list, int debug){
 /* Algoritmo de substituicao Aleatorio (Random) */
     Report report = {0, 0};
-    Page *page_search = init_page();
+    Cell *page_search = init_frame();
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         rw = tolower(rw);
-        addr = page_addr(addr, page_table->page_size);
+        addr = page_addr(addr, list->page_size);
 
         if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
 
-        page_search = search_table(addr, page_table);
+        page_search = search_list(addr, list);
         if (page_search != NULL) {
             // Achou a pagina
         }
@@ -290,15 +287,16 @@ Report sub_random(FILE *file, Page* page_table, int debug){
             report.page_faults++;
 
             if (debug) printf("Page fault\n");
-            
-            if (!is_full(page_table)) {
-                insert_table_end(addr, page_table);
+
+            if (!is_full(list)) {
+                insert_end_list(addr, list);
             }
             else {
             // Usa o algoritmo
             // O que eh dirty page???                  
             }
         }
+
     }
 
     free(page_search);

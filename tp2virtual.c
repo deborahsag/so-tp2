@@ -17,14 +17,14 @@ int main(int argc, char *argv[])  {
     int page_size = atoi(argv[3]);
     int max_table_size = mem_size / page_size;
 
-    Page *page_table = init_page();
-    page_table->page_size = page_size;
-    page_table->max_table_size = max_table_size;
+    Cell *list = init_frame();
+    list->page_size = page_size;
+    list->max_table_size = max_table_size;
 
     if (debug) {
         printf("\nIniciando tabela de paginas\n");
-        printf("Tamanho da pagina: %d KB\n", page_table->page_size);
-        printf("Tamanho da tabela: %d paginas\n\n", page_table->max_table_size);
+        printf("Tamanho da pagina: %d KB\n", list->page_size);
+        printf("Tamanho da tabela: %d paginas\n\n", list->max_table_size);
     }
     
     Report report;
@@ -32,23 +32,23 @@ int main(int argc, char *argv[])  {
     FILE *file = fopen(argv[2], "r");
     
     if (strcmp(argv[1], "lru") == 0) {
-        report = sub_lru(file, page_table, debug);
+        report = sub_lru(file, list, debug);
     }
     else if (strcmp(argv[1], "2a") == 0) {
-        report = sub_2a(file, page_table, debug);
+        report = sub_2a(file, list, debug);
     }
     else if (strcmp(argv[1], "fifo") == 0) {
-        report = sub_fifo(file, page_table, debug);
+        report = sub_fifo(file, list, debug);
     }
     else if (strcmp(argv[1], "random") == 0) {
-        report = sub_random(file, page_table, debug);
+        report = sub_random(file, list, debug);
     }
     
     fclose(file);
 
-    if (debug) print_table(page_table);
+    if (debug) print_linked_list(list);
 
-    free_table(page_table);
+    free_list(list);
     
     if (debug) printf("\nFim da depuracao\n\n");
 
