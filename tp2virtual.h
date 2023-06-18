@@ -220,36 +220,44 @@ Report sub_fifo(FILE *file, Cell* list, int debug){
 
 Report sub_lru(FILE *file, Cell* list, int debug) {
 /* Algoritmo de substituicao Least Recently Used (LRU) */
+    Page *table = malloc(2097152 * sizeof(Page));
     Report report = {0, 0};
+
     Cell *page_search;
+
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
-        rw = tolower(rw);
+
         addr = page_addr(addr, list->page_size);
 
-        if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
+        if (debug) {
+            printf("\nEndereco: %x, modo: %c\n", addr, rw);
+            printf("Valido: %d\n", table[addr].valid);
+            printf("Sujo: %d\n", table[addr].dirty);
+        }
 
-        page_search = search_list(addr, list);
-        if (page_search != NULL) {
+        if (table[addr].valid) {
+            if (rw == 'W') {
+                table[addr].dirty = 1;
+            }
+            page_search = search_list(addr, list);
             move_to_bottom(page_search, list);
         }
-        else {
+        else { 
             report.page_faults++;
-
-            if (debug) printf("Page fault\n");
-
             if (is_full(list)) {
-                remove_top_list(list);
-                report.dirty_pages++;
-
-                if (debug) printf("Escrita em disco\n");
-
+                unsigned rm_addr = remove_top_list(list);
+                table[rm_addr].valid = 0;
+                if (table[rm_addr].dirty) {
+                    report.dirty_pages++; 
+                }
             }
-            insert_end_list(addr, list);               
+            table[addr].addr = addr;
+            table[addr].valid = 1;
+            insert_end_list(addr, list);             
         }
-
     }
 
     return report;
@@ -258,38 +266,23 @@ Report sub_lru(FILE *file, Cell* list, int debug) {
 
 Report sub_2a(FILE *file, Cell* list, int debug) {
 /* Algoritmo de substituicao Segunda Chance (2a) */
+    Page *table = malloc(2097152 * sizeof(Page));
     Report report = {0, 0};
-    Cell *page_search = init_frame();
+    
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
-        rw = tolower(rw);
+        
         addr = page_addr(addr, list->page_size);
 
-        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
-
-        page_search = search_list(addr, list);
-        if (page_search != NULL) {
-            // Achou a pagina
-        }
-        else {
-            report.page_faults++;
-
-            if (debug) printf("Page fault\n");
-
-            if (!is_full(list)) {
-                insert_end_list(addr, list);
-            }
-            else {
-            // Usa o algoritmo
-            // O que eh dirty page???                  
-            }
+        if (debug) {
+            printf("\nEndereco: %x, modo: %c\n", addr, rw);
+            printf("Valido: %d\n", table[addr].valid);
+            printf("Sujo: %d\n", table[addr].dirty);
         }
 
     }
-
-    free(page_search);
 
     return report;
 }
@@ -297,38 +290,23 @@ Report sub_2a(FILE *file, Cell* list, int debug) {
 
 Report sub_random(FILE *file, Cell* list, int debug){
 /* Algoritmo de substituicao Aleatorio (Random) */
+    Page *table = malloc(2097152 * sizeof(Page));
     Report report = {0, 0};
-    Cell *page_search = init_frame();
+
     unsigned addr;
     char rw;
 
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
-        rw = tolower(rw);
+        
         addr = page_addr(addr, list->page_size);
 
-        if (debug) printf("Endereco: %x, modo: %c\n", addr, rw);
-
-        page_search = search_list(addr, list);
-        if (page_search != NULL) {
-            // Achou a pagina
-        }
-        else {
-            report.page_faults++;
-
-            if (debug) printf("Page fault\n");
-
-            if (!is_full(list)) {
-                insert_end_list(addr, list);
-            }
-            else {
-            // Usa o algoritmo
-            // O que eh dirty page???                  
-            }
+        if (debug) {
+            printf("\nEndereco: %x, modo: %c\n", addr, rw);
+            printf("Valido: %d\n", table[addr].valid);
+            printf("Sujo: %d\n", table[addr].dirty);
         }
 
     }
-
-    free(page_search);
 
     return report;
 }
