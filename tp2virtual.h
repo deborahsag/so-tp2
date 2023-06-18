@@ -10,10 +10,15 @@ struct Report{
     int dirty_pages;
 };
 
+typedef struct Page Page;
+struct Page {
+    unsigned addr;
+    int valid;
+};
 
 typedef struct Cell Cell;
 struct Cell {
-    unsigned addr;
+    Page page;
     int page_size;
     int table_size;
     int max_table_size;
@@ -22,6 +27,9 @@ struct Cell {
     Cell *last;
 };
 
+void init_table(Page *table) {
+
+}
 
 Cell* init_frame() {
 /* Inicia uma celula nova da lista */
@@ -37,7 +45,7 @@ Cell* init_frame() {
 void insert_end_list(unsigned addr, Cell* list) {
 /* Insere um quadro dado seu endereco no fim da lista */
     Cell *frame = init_frame();
-    frame->addr = addr;
+    frame->page.addr = addr;
 
     if (list->next == NULL) {
         list->next = frame;
@@ -96,7 +104,7 @@ Cell* search_list(unsigned addr, Cell* list) {
     Cell *frame = list;
     while(frame->next != NULL){
         frame = frame->next;
-        if (frame->addr == addr){
+        if (frame->page.addr == addr){
             return frame;
         }
     }
@@ -110,7 +118,7 @@ void print_linked_list(Cell* list) {
     Cell *frame = list;
     while(frame->next != NULL) {
         frame = frame->next;
-        printf("%x\n", frame->addr);
+        printf("%x\n", frame->page.addr);
     }
     printf("\n");
 }
@@ -121,7 +129,7 @@ void print_backwards(Cell* list) {
     printf("\nTabela de tras para frente:\n");
     Cell *frame = list->last;
     while(frame->prev != NULL) {
-        printf("%x\n", frame->addr);
+        printf("%x\n", frame->page.addr);
         frame = frame->prev;
     }
     printf("\n");
@@ -151,8 +159,53 @@ unsigned page_addr(unsigned addr, int page_size) {
 }
 
 
+Report sub_fifo(FILE *file, Cell* list, int debug){
+/* Algoritmo de substituicao First In First Out (FIFO) */
+    //Page table[2097152] = {{0, 0}};
+    Report report = {0, 0};
+    Cell *page_search = init_frame();
+    unsigned mem_addr;
+    unsigned addr;
+    char rw;
+
+    //printf("\n\nValido: %d\n\n", table[0].valid);
+
+    while (fscanf(file, "%x %c", &mem_addr, &rw) != EOF) {
+        rw = tolower(rw);
+        addr = page_addr(mem_addr, list->page_size);
+
+        if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
+
+        if (rw == 'r') {
+            page_search = search_list(addr, list);
+            if (page_search != NULL) {
+                if (debug) printf("Encontrou a pagina\n");
+            }
+            else {
+                report.page_faults++;
+
+                if (debug) printf("Page fault\n");
+                
+                if (is_full(list)) {
+                    remove_top_list(list);
+                    report.dirty_pages++;
+
+                    if (debug) printf("Escrita em disco\n");
+                }
+                insert_end_list(addr, list);
+            }
+        }
+        else {
+            //table[addr].valid = 1;
+        }
+    }
+
+    return report;
+}
+
+
 Report sub_lru(FILE *file, Cell* list, int debug) {
-/* Algoritmo de substituicao Last Recently Used (LRU) */
+/* Algoritmo de substituicao Least Recently Used (LRU) */
     Report report = {0, 0};
     Cell *page_search = init_frame();
     unsigned addr;
@@ -224,43 +277,6 @@ Report sub_2a(FILE *file, Cell* list, int debug) {
     }
 
     free(page_search);
-
-    return report;
-}
-
-
-Report sub_fifo(FILE *file, Cell* list, int debug){
-/* Algoritmo de substituicao First In First Out (FIFO) */
-    Report report = {0, 0};
-    Cell *page_search = init_frame();
-    unsigned addr;
-    char rw;
-
-    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
-        rw = tolower(rw);
-        addr = page_addr(addr, list->page_size);
-
-        if (debug) printf("\nEndereco: %x, modo: %c\n", addr, rw);
-
-        page_search = search_list(addr, list);
-        if (page_search != NULL) {
-            if (debug) printf("Encontrou a pagina\n");
-        }
-        else {
-            report.page_faults++;
-
-            if (debug) printf("Page fault\n");
-            
-            if (is_full(list)) {
-                remove_top_list(list);
-                report.dirty_pages++;
-
-                if (debug) printf("Escrita em disco\n");
-            }
-            insert_end_list(addr, list);
-        }
-
-    }
 
     return report;
 }
