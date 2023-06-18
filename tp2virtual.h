@@ -15,6 +15,7 @@ struct Page {
     unsigned addr;
     int valid;
     int dirty;
+    int ref;
 };
 
 typedef struct Cell Cell;
@@ -28,9 +29,6 @@ struct Cell {
     Cell *last;
 };
 
-void init_table(Page *table) {
-
-}
 
 Cell* init_frame() {
 /* Inicia uma celula nova da lista */
@@ -43,10 +41,10 @@ Cell* init_frame() {
 }
 
 
-void insert_end_list(unsigned addr, Cell* list) {
+void insert_end_list(Page page, Cell* list) {
 /* Insere um quadro dado seu endereco no fim da lista */
     Cell *frame = init_frame();
-    frame->page.addr = addr;
+    frame->page = page;
 
     if (list->next == NULL) {
         list->next = frame;
@@ -68,6 +66,41 @@ unsigned remove_top_list(Cell* list) {
     list->next = list->next->next;
     list->next->prev = list;
     free(first);
+    list->list_size--;
+    return rm_addr;
+}
+
+
+unsigned remove_random_list(Cell *list) {
+/* Elimina um quadro aleatorio da lista */
+    int idx = random() % list->list_size;
+
+    Cell* rm_cell = list->next;
+    
+    int count = 0;
+    while (rm_cell != NULL) {
+        if (count == idx) break;
+        rm_cell = rm_cell->next;
+        count++;
+    }
+
+    unsigned rm_addr = rm_cell->page.addr;
+
+    if (rm_cell->prev == list) {
+        list->next = rm_cell->next;
+        list->next->prev = list;
+    }
+    else if (rm_cell->next == NULL) {
+        list->last = rm_cell->prev;
+        list->last->next = NULL;
+    }
+    else {
+        rm_cell->prev->next = rm_cell->next;
+        rm_cell->next->prev = rm_cell->prev;
+    }
+
+    free(rm_cell);
+
     list->list_size--;
     return rm_addr;
 }
@@ -211,7 +244,7 @@ Report sub_fifo(FILE *file, Cell* list, int debug){
             }
             table[addr].addr = addr;
             table[addr].valid = 1;
-            insert_end_list(addr, list);             
+            insert_end_list(table[addr], list);             
         }
     }
 
@@ -256,32 +289,8 @@ Report sub_lru(FILE *file, Cell* list, int debug) {
             }
             table[addr].addr = addr;
             table[addr].valid = 1;
-            insert_end_list(addr, list);             
+            insert_end_list(table[addr], list);             
         }
-    }
-
-    return report;
-}
-
-
-Report sub_2a(FILE *file, Cell* list, int debug) {
-/* Algoritmo de substituicao Segunda Chance (2a) */
-    Page *table = malloc(2097152 * sizeof(Page));
-    Report report = {0, 0};
-    
-    unsigned addr;
-    char rw;
-
-    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
-        
-        addr = page_addr(addr, list->page_size);
-
-        if (debug) {
-            printf("\nEndereco: %x, modo: %c\n", addr, rw);
-            printf("Valido: %d\n", table[addr].valid);
-            printf("Sujo: %d\n", table[addr].dirty);
-        }
-
     }
 
     return report;
@@ -296,6 +305,53 @@ Report sub_random(FILE *file, Cell* list, int debug){
     unsigned addr;
     char rw;
 
+    srandom(42);
+
+    while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
+
+        addr = page_addr(addr, list->page_size);
+
+        if (debug) {
+            printf("\nEndereco: %x, modo: %c\n", addr, rw);
+            printf("Valido: %d\n", table[addr].valid);
+            printf("Sujo: %d\n", table[addr].dirty);
+        }
+
+        if (table[addr].valid) {
+            if (rw == 'W') {
+                table[addr].dirty = 1;
+            }
+        }
+        else { 
+            report.page_faults++;
+            if (is_full(list)) {
+                unsigned rm_addr = remove_random_list(list);
+                table[rm_addr].valid = 0;
+                if (table[rm_addr].dirty) {
+                    report.dirty_pages++; 
+                }
+            }
+            table[addr].addr = addr;
+            table[addr].valid = 1;
+            insert_end_list(table[addr], list);             
+        }
+
+    }
+
+    return report;
+}
+
+
+Report sub_2a(FILE *file, Cell* list, int debug) {
+/* Algoritmo de substituicao Segunda Chance (2a) */
+    Page *table = malloc(2097152 * sizeof(Page));
+    Report report = {0, 0};
+    
+    Cell *pointer = list;
+
+    unsigned addr;
+    char rw;
+
     while (fscanf(file, "%x %c", &addr, &rw) != EOF) {
         
         addr = page_addr(addr, list->page_size);
@@ -306,7 +362,39 @@ Report sub_random(FILE *file, Cell* list, int debug){
             printf("Sujo: %d\n", table[addr].dirty);
         }
 
+        if (table[addr].valid) {
+            if (rw == 'W') {
+                table[addr].dirty = 1;
+            }
+        }
+        else { 
+            report.page_faults++;
+            table[addr].addr = addr;
+            table[addr].valid = 1;
+            table[addr].ref = 1;
+            
+            Cell *new = init_frame();
+            new->page = table[addr];
+
+            if (!is_full(list)) {
+                insert_end_list(table[addr], list);   
+                list->last->next = list->next;        
+            } else {
+                int ref = 1;
+                while (ref == 1) {
+                    while (pointer->prev == NULL) pointer = pointer->next;
+                    if (pointer->page.ref == 1) {
+                        pointer->page.ref = 0;
+                        pointer = pointer->next;
+                    } else {
+                        ref = 0;
+                    }
+                }
+                swap_for_new(pointer, new, list);
+            }
+        }
     }
 
     return report;
 }
+
