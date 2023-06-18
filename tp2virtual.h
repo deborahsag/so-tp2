@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <ctype.h>
 
 
@@ -79,10 +78,10 @@ void swap_for_new(Page* old, Page* new, Page* page_table) {
 }
 
 
-bool is_full(Page* page_table) {
+int is_full(Page* page_table) {
 /* Retorna se a tabela de paginas esta cheia */
-    if (page_table->table_size >= page_table->max_size) return true;
-    else return false;
+    if (page_table->table_size >= page_table->max_size) return 1;
+    else return 0;
 }
 
 
@@ -145,7 +144,7 @@ unsigned page_addr(unsigned addr, int page_size) {
 }
 
 
-Report sub_lru(FILE *file, Page* page_table, bool debug) {
+Report sub_lru(FILE *file, Page* page_table, int debug) {
 /* Algoritmo de substituicao Last Recently Used (LRU) */
     Report report = {0, 0};
     Page *page_search = init_page();
@@ -179,7 +178,7 @@ Report sub_lru(FILE *file, Page* page_table, bool debug) {
 }
 
 
-Report sub_2a(FILE *file, Page* page_table, bool debug) {
+Report sub_2a(FILE *file, Page* page_table, int debug) {
 /* Algoritmo de substituicao Segunda Chance (2a) */
     Report report = {0, 0};
     Page *page_search = init_page();
@@ -213,7 +212,7 @@ Report sub_2a(FILE *file, Page* page_table, bool debug) {
 }
 
 
-Report sub_fifo(FILE *file, Page* page_table, bool debug){
+Report sub_fifo(FILE *file, Page* page_table, int debug){
 /* Algoritmo de substituicao First In First Out (FIFO) */
     Report report = {0, 0};
     Page *page_search = init_page();
@@ -247,7 +246,7 @@ Report sub_fifo(FILE *file, Page* page_table, bool debug){
 }
 
 
-Report sub_random(FILE *file, Page* page_table, bool debug){
+Report sub_random(FILE *file, Page* page_table, int debug){
 /* Algoritmo de substituicao Aleatorio (Random) */
     Report report = {0, 0};
     Page *page_search = init_page();

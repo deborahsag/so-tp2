@@ -3,8 +3,8 @@
 int main(int argc, char *argv[])  {
     
     /* Ativa modo de depuracao */
-    bool debug;
-    if (strcmp(argv[5], "debug") == 0) debug = true; else debug = false;
+    int debug;
+    if (strcmp(argv[5], "debug") == 0) debug = 1; else debug = 0;
     if (debug) printf("Modo de depuracao\n\n");
     
     printf("Executando o simulador...\n");
