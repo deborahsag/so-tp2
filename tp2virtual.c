@@ -3,8 +3,8 @@
 int main(int argc, char *argv[])  {
     
     /* Ativa modo de depuracao */
-    int debug;
-    if (strcmp(argv[5], "debug") == 0) debug = 1; else debug = 0;
+    int debug = 0;
+    // if (strcmp(argv[5], "debug") == 0) debug = 1; else debug = 0;
     if (debug) printf("Modo de depuracao\n\n");
     
     printf("Executando o simulador...\n");
@@ -46,9 +46,7 @@ int main(int argc, char *argv[])  {
     
     fclose(file);
 
-    if (debug) print_linked_list(list);
-
-    free_list(list);
+    free_back(list);
     
     if (debug) printf("\nFim da depuracao\n\n");
 

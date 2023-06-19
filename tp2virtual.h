@@ -197,6 +197,19 @@ void free_list(Cell* list) {
 }
 
 
+void free_back(Cell *list) {
+/* Desaloca lista duplamente encadeada de tras para frente */
+    Cell *last = list->last;
+    Cell *aux = last;
+    while(last->prev != NULL) {
+        aux = last;
+        last = last->prev;
+        free(aux);
+    }
+    free(last);
+}
+
+
 unsigned page_addr(unsigned addr, int page_size) {
 /* Identifica a pagina a partir dos s bits menos significativos do endereco, baseado no tamanho da pagina */
     int temp = page_size * 1024;
@@ -239,7 +252,7 @@ Report sub_fifo(FILE *file, Cell* list, int debug){
                 unsigned rm_addr = remove_top_list(list);
                 table[rm_addr].valid = 0;
                 if (table[rm_addr].dirty) {
-                    report.dirty_pages++; 
+                    report.dirty_pages++;
                 }
             }
             table[addr].addr = addr;
@@ -372,9 +385,6 @@ Report sub_2a(FILE *file, Cell* list, int debug) {
             table[addr].addr = addr;
             table[addr].valid = 1;
             table[addr].ref = 1;
-            
-            Cell *new = init_frame();
-            new->page = table[addr];
 
             if (!is_full(list)) {
                 insert_end_list(table[addr], list);   
@@ -382,7 +392,7 @@ Report sub_2a(FILE *file, Cell* list, int debug) {
             } else {
                 int ref = 1;
                 while (ref == 1) {
-                    while (pointer->prev == NULL) pointer = pointer->next;
+                    if (pointer->prev == NULL) pointer = pointer->next;
                     if (pointer->page.ref == 1) {
                         pointer->page.ref = 0;
                         pointer = pointer->next;
@@ -390,7 +400,12 @@ Report sub_2a(FILE *file, Cell* list, int debug) {
                         ref = 0;
                     }
                 }
-                swap_for_new(pointer, new, list);
+                unsigned rm_addr = pointer->page.addr;
+                table[rm_addr].valid = 0;
+                if (table[rm_addr].dirty) {
+                    report.dirty_pages++; 
+                }
+                pointer->page = table[addr];
             }
         }
     }
