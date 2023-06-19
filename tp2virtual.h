@@ -31,7 +31,7 @@ struct Cell {
 
 
 Cell* init_frame() {
-/* Inicia uma celula nova da lista */
+/* Inicia uma celula da lista duplamente encadeada */
     Cell *frame = malloc (sizeof(Cell));
     frame->prev = NULL;
     frame->next = NULL;
@@ -41,8 +41,8 @@ Cell* init_frame() {
 }
 
 
-void insert_end_list(Page page, Cell* list) {
-/* Insere um quadro dado seu endereco no fim da lista */
+void insert_end_list(Page page, Cell *list) {
+/* Insere uma nova pagina no fim de uma lista */
     Cell *frame = init_frame();
     frame->page = page;
 
@@ -59,7 +59,7 @@ void insert_end_list(Page page, Cell* list) {
 }
 
 
-unsigned remove_top_list(Cell* list) {
+unsigned remove_top_list(Cell *list) {
 /* Elimina o quadro do topo da lista */
     Cell* first = list->next;
     unsigned rm_addr = first->page.addr;
